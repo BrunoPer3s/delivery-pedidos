@@ -6,6 +6,7 @@ import br.ufes.deliverypedidos.dto.response.ClienteResponse;
 import br.ufes.deliverypedidos.exception.RecursoNaoEncontradoException;
 import br.ufes.deliverypedidos.exception.RegraDeNegocioException;
 import br.ufes.deliverypedidos.mapper.ClienteMapper;
+import br.ufes.deliverypedidos.mapper.EnderecoMapper;
 import br.ufes.deliverypedidos.repository.ClienteRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,12 @@ public class ClienteService {
 
     private final ClienteRepository repository;
     private final ClienteMapper mapper;
+    private final EnderecoMapper enderecoMapper;
 
-    public ClienteService(ClienteRepository repository, ClienteMapper mapper) {
+    public ClienteService(ClienteRepository repository, ClienteMapper mapper, EnderecoMapper enderecoMapper) {
         this.repository = repository;
         this.mapper = mapper;
+        this.enderecoMapper = enderecoMapper;
     }
 
     @Transactional
@@ -49,7 +52,7 @@ public class ClienteService {
         cliente.setNome(req.nome());
         cliente.setEmail(req.email());
         cliente.setTelefone(req.telefone());
-        cliente.setEndereco(mapper.toEndereco(req.endereco()));
+        cliente.setEndereco(enderecoMapper.toEntity(req.endereco()));
         return mapper.toResponse(cliente);
     }
 

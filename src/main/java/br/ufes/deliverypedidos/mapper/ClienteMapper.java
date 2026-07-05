@@ -1,8 +1,6 @@
 package br.ufes.deliverypedidos.mapper;
 
 import br.ufes.deliverypedidos.domain.model.Cliente;
-import br.ufes.deliverypedidos.domain.model.Endereco;
-import br.ufes.deliverypedidos.dto.EnderecoDTO;
 import br.ufes.deliverypedidos.dto.request.ClienteRequest;
 import br.ufes.deliverypedidos.dto.response.ClienteResponse;
 import org.springframework.stereotype.Component;
@@ -10,8 +8,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClienteMapper {
 
+    private final EnderecoMapper enderecoMapper;
+
+    public ClienteMapper(EnderecoMapper enderecoMapper) {
+        this.enderecoMapper = enderecoMapper;
+    }
+
     public Cliente toEntity(ClienteRequest req) {
-        return new Cliente(req.nome(), req.email(), req.telefone(), toEndereco(req.endereco()));
+        return new Cliente(req.nome(), req.email(), req.telefone(), enderecoMapper.toEntity(req.endereco()));
     }
 
     public ClienteResponse toResponse(Cliente cliente) {
@@ -20,25 +24,6 @@ public class ClienteMapper {
                 cliente.getNome(),
                 cliente.getEmail(),
                 cliente.getTelefone(),
-                toEnderecoDTO(cliente.getEndereco()));
-    }
-
-    public Endereco toEndereco(EnderecoDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-        return new Endereco(dto.logradouro(), dto.numero(), dto.bairro(), dto.cidade(), dto.cep());
-    }
-
-    private EnderecoDTO toEnderecoDTO(Endereco endereco) {
-        if (endereco == null) {
-            return null;
-        }
-        return new EnderecoDTO(
-                endereco.getLogradouro(),
-                endereco.getNumero(),
-                endereco.getBairro(),
-                endereco.getCidade(),
-                endereco.getCep());
+                enderecoMapper.toDTO(cliente.getEndereco()));
     }
 }
