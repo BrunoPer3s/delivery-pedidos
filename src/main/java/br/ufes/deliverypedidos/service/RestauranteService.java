@@ -1,9 +1,11 @@
 package br.ufes.deliverypedidos.service;
 
 import br.ufes.deliverypedidos.domain.model.Restaurante;
+import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.request.RestauranteRequest;
 import br.ufes.deliverypedidos.dto.response.RestauranteResponse;
 import br.ufes.deliverypedidos.exception.RecursoNaoEncontradoException;
+import br.ufes.deliverypedidos.exception.RegraDeNegocioException;
 import br.ufes.deliverypedidos.mapper.EnderecoMapper;
 import br.ufes.deliverypedidos.mapper.RestauranteMapper;
 import br.ufes.deliverypedidos.repository.RestauranteRepository;
@@ -26,8 +28,13 @@ public class RestauranteService {
     }
 
     @Transactional
-    public RestauranteResponse criar(RestauranteRequest req) {
-        return mapper.toResponse(repository.save(mapper.toEntity(req)));
+    public RestauranteResponse criar(RestauranteRequest req, Usuario dono) {
+        if (repository.existsByUsuarioId(dono.getId())) {
+            throw new RegraDeNegocioException("Este usuário já possui um restaurante cadastrado");
+        }
+        Restaurante restaurante = mapper.toEntity(req);
+        restaurante.setUsuario(dono);
+        return mapper.toResponse(repository.save(restaurante));
     }
 
     @Transactional(readOnly = true)

@@ -1,9 +1,11 @@
 package br.ufes.deliverypedidos.service;
 
 import br.ufes.deliverypedidos.domain.model.Entregador;
+import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.request.EntregadorRequest;
 import br.ufes.deliverypedidos.dto.response.EntregadorResponse;
 import br.ufes.deliverypedidos.exception.RecursoNaoEncontradoException;
+import br.ufes.deliverypedidos.exception.RegraDeNegocioException;
 import br.ufes.deliverypedidos.mapper.EntregadorMapper;
 import br.ufes.deliverypedidos.repository.EntregadorRepository;
 import java.util.List;
@@ -22,8 +24,13 @@ public class EntregadorService {
     }
 
     @Transactional
-    public EntregadorResponse criar(EntregadorRequest req) {
-        return mapper.toResponse(repository.save(mapper.toEntity(req)));
+    public EntregadorResponse criar(EntregadorRequest req, Usuario dono) {
+        if (repository.existsByUsuarioId(dono.getId())) {
+            throw new RegraDeNegocioException("Este usuário já possui um entregador cadastrado");
+        }
+        Entregador entregador = mapper.toEntity(req);
+        entregador.setUsuario(dono);
+        return mapper.toResponse(repository.save(entregador));
     }
 
     @Transactional(readOnly = true)

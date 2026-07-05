@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import br.ufes.deliverypedidos.domain.model.Papel;
 import br.ufes.deliverypedidos.domain.model.StatusPedido;
+import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.EnderecoDTO;
 import br.ufes.deliverypedidos.dto.request.ClienteRequest;
 import br.ufes.deliverypedidos.dto.request.EntregadorRequest;
@@ -18,6 +20,7 @@ import br.ufes.deliverypedidos.dto.response.ProdutoResponse;
 import br.ufes.deliverypedidos.dto.response.RestauranteResponse;
 import br.ufes.deliverypedidos.exception.RegraDeNegocioException;
 import br.ufes.deliverypedidos.exception.TransicaoInvalidaException;
+import br.ufes.deliverypedidos.repository.UsuarioRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -45,18 +48,26 @@ class PedidoServiceTest {
     @Autowired
     private EntregadorService entregadorService;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     private EnderecoDTO endereco() {
         return new EnderecoDTO("Rua A", "10", "Centro", "Vitória", "29000-000");
     }
 
+    private Usuario novoUsuario(Papel papel) {
+        return usuarioRepository.save(new Usuario("Usuário", papel.name() + System.nanoTime() + "@x.com",
+                "senha123", papel));
+    }
+
     private RestauranteResponse novoRestaurante(String nome, BigDecimal taxa) {
         return restauranteService.criar(new RestauranteRequest(nome, "27000000000", "Italiana",
-                taxa, endereco()));
+                taxa, endereco()), novoUsuario(Papel.RESTAURANTE));
     }
 
     private Long novoClienteId() {
         return clienteService.criar(new ClienteRequest("Bruno", "bruno" + System.nanoTime() + "@x.com",
-                "27999999999", endereco())).id();
+                "27999999999", endereco()), novoUsuario(Papel.CLIENTE)).id();
     }
 
     private ProdutoResponse novoProduto(Long restauranteId, BigDecimal preco, boolean disponivel) {
@@ -119,7 +130,7 @@ class PedidoServiceTest {
     void atribuirEntregadorVinculaAoPedido() {
         PedidoResponse pedido = pedidoBasico();
         EntregadorResponse entregador = entregadorService.criar(
-                new EntregadorRequest("Carlos", "27988887777", "ABC1D23"));
+                new EntregadorRequest("Carlos", "27988887777", "ABC1D23"), novoUsuario(Papel.ENTREGADOR));
         PedidoResponse atualizado = pedidoService.atribuirEntregador(pedido.id(), entregador.id());
         assertEquals(entregador.id(), atualizado.entregadorId());
     }

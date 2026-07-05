@@ -1,6 +1,7 @@
 package br.ufes.deliverypedidos.service;
 
 import br.ufes.deliverypedidos.domain.model.Cliente;
+import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.request.ClienteRequest;
 import br.ufes.deliverypedidos.dto.response.ClienteResponse;
 import br.ufes.deliverypedidos.exception.RecursoNaoEncontradoException;
@@ -26,11 +27,16 @@ public class ClienteService {
     }
 
     @Transactional
-    public ClienteResponse criar(ClienteRequest req) {
+    public ClienteResponse criar(ClienteRequest req, Usuario dono) {
+        if (repository.existsByUsuarioId(dono.getId())) {
+            throw new RegraDeNegocioException("Este usuário já possui um cliente cadastrado");
+        }
         if (repository.existsByEmail(req.email())) {
             throw new RegraDeNegocioException("Já existe um cliente com o e-mail " + req.email());
         }
-        return mapper.toResponse(repository.save(mapper.toEntity(req)));
+        Cliente cliente = mapper.toEntity(req);
+        cliente.setUsuario(dono);
+        return mapper.toResponse(repository.save(cliente));
     }
 
     @Transactional(readOnly = true)
