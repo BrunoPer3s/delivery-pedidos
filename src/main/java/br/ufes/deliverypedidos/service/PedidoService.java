@@ -8,6 +8,7 @@ import br.ufes.deliverypedidos.domain.model.Pedido;
 import br.ufes.deliverypedidos.domain.model.Produto;
 import br.ufes.deliverypedidos.domain.model.Restaurante;
 import br.ufes.deliverypedidos.domain.model.StatusPedido;
+import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.request.ItemPedidoRequest;
 import br.ufes.deliverypedidos.dto.request.PedidoRequest;
 import br.ufes.deliverypedidos.dto.response.PedidoResponse;
@@ -51,8 +52,8 @@ public class PedidoService {
     }
 
     @Transactional
-    public PedidoResponse criar(PedidoRequest req) {
-        Cliente cliente = buscarCliente(req.clienteId());
+    public PedidoResponse criar(PedidoRequest req, Usuario usuarioLogado) {
+        Cliente cliente = clienteDoUsuario(usuarioLogado);
         Restaurante restaurante = buscarRestaurante(req.restauranteId());
 
         Endereco enderecoEntrega = req.enderecoEntrega() != null
@@ -77,6 +78,17 @@ public class PedidoService {
         Page<Pedido> pedidos = (status != null)
                 ? repository.findByStatus(status, pageable)
                 : repository.findAll(pageable);
+        return pedidos.map(mapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PedidoResponse> listarDoUsuario(Usuario usuario, Pageable pageable) {
+        Page<Pedido> pedidos = switch (usuario.getPapel()) {
+            case CLIENTE -> repository.findByClienteId(clienteDoUsuario(usuario).getId(), pageable);
+            case RESTAURANTE -> repository.findByRestauranteId(restauranteDoUsuario(usuario).getId(), pageable);
+            case ENTREGADOR -> repository.findByEntregadorId(entregadorDoUsuario(usuario).getId(), pageable);
+            case ADMIN -> repository.findAll(pageable);
+        };
         return pedidos.map(mapper::toResponse);
     }
 
@@ -169,9 +181,19 @@ public class PedidoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado: " + id));
     }
 
-    private Cliente buscarCliente(Long id) {
-        return clienteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado: " + id));
+    private Cliente clienteDoUsuario(Usuario usuario) {
+        return clienteRepository.findByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new RegraDeNegocioException("Usuário não possui um cliente cadastrado"));
+    }
+
+    private Restaurante restauranteDoUsuario(Usuario usuario) {
+        return restauranteRepository.findByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new RegraDeNegocioException("Usuário não possui um restaurante cadastrado"));
+    }
+
+    private Entregador entregadorDoUsuario(Usuario usuario) {
+        return entregadorRepository.findByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new RegraDeNegocioException("Usuário não possui um entregador cadastrado"));
     }
 
     private Restaurante buscarRestaurante(Long id) {

@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record PedidoRequest(
-        @NotNull Long clienteId,
         @NotNull Long restauranteId,
         @Valid EnderecoDTO enderecoEntrega,
         @NotEmpty @Valid List<ItemPedidoRequest> itens) {

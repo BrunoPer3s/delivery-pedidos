@@ -65,9 +65,12 @@ class PedidoServiceTest {
                 taxa, endereco()), novoUsuario(Papel.RESTAURANTE));
     }
 
-    private Long novoClienteId() {
-        return clienteService.criar(new ClienteRequest("Bruno", "bruno" + System.nanoTime() + "@x.com",
-                "27999999999", endereco()), novoUsuario(Papel.CLIENTE)).id();
+    // Cria um cliente e devolve o usuário dono, usado para autenticar a criação do pedido.
+    private Usuario novoClienteUsuario() {
+        Usuario dono = novoUsuario(Papel.CLIENTE);
+        clienteService.criar(new ClienteRequest("Bruno", "bruno" + System.nanoTime() + "@x.com",
+                "27999999999", endereco()), dono);
+        return dono;
     }
 
     private ProdutoResponse novoProduto(Long restauranteId, BigDecimal preco, boolean disponivel) {
@@ -78,9 +81,8 @@ class PedidoServiceTest {
     private PedidoResponse pedidoBasico() {
         RestauranteResponse restaurante = novoRestaurante("Cantina", new BigDecimal("5.00"));
         ProdutoResponse produto = novoProduto(restaurante.id(), new BigDecimal("40.00"), true);
-        Long clienteId = novoClienteId();
-        return pedidoService.criar(new PedidoRequest(clienteId, restaurante.id(), endereco(),
-                List.of(new ItemPedidoRequest(produto.id(), 2))));
+        return pedidoService.criar(new PedidoRequest(restaurante.id(), endereco(),
+                List.of(new ItemPedidoRequest(produto.id(), 2))), novoClienteUsuario());
     }
 
     @Test
@@ -110,20 +112,20 @@ class PedidoServiceTest {
         RestauranteResponse restauranteA = novoRestaurante("A", new BigDecimal("5.00"));
         RestauranteResponse restauranteB = novoRestaurante("B", new BigDecimal("5.00"));
         ProdutoResponse produtoB = novoProduto(restauranteB.id(), new BigDecimal("10.00"), true);
-        Long clienteId = novoClienteId();
-        PedidoRequest req = new PedidoRequest(clienteId, restauranteA.id(), endereco(),
+        Usuario clienteUsuario = novoClienteUsuario();
+        PedidoRequest req = new PedidoRequest(restauranteA.id(), endereco(),
                 List.of(new ItemPedidoRequest(produtoB.id(), 1)));
-        assertThrows(RegraDeNegocioException.class, () -> pedidoService.criar(req));
+        assertThrows(RegraDeNegocioException.class, () -> pedidoService.criar(req, clienteUsuario));
     }
 
     @Test
     void produtoIndisponivelLancaRegraDeNegocio() {
         RestauranteResponse restaurante = novoRestaurante("Cantina", new BigDecimal("5.00"));
         ProdutoResponse produto = novoProduto(restaurante.id(), new BigDecimal("10.00"), false);
-        Long clienteId = novoClienteId();
-        PedidoRequest req = new PedidoRequest(clienteId, restaurante.id(), endereco(),
+        Usuario clienteUsuario = novoClienteUsuario();
+        PedidoRequest req = new PedidoRequest(restaurante.id(), endereco(),
                 List.of(new ItemPedidoRequest(produto.id(), 1)));
-        assertThrows(RegraDeNegocioException.class, () -> pedidoService.criar(req));
+        assertThrows(RegraDeNegocioException.class, () -> pedidoService.criar(req, clienteUsuario));
     }
 
     @Test
