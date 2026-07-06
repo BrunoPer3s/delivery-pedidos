@@ -1,0 +1,609 @@
+{
+  "info": {
+    "_postman_id": "delivery-api-rest-collection",
+    "name": "Delivery API REST",
+    "description": "Fluxo ponta a ponta da API de delivery: autenticacao JWT, autocadastro por papel, ciclo de vida do pedido (State), posse (403), 401, pagamento (Strategy) e rastreamento (Observer). Os tokens e ids sao capturados automaticamente por scripts, entao basta rodar de cima para baixo (ou usar o Collection Runner). Selecione o environment 'Delivery API - Local'.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Autenticacao",
+      "item": [
+        {
+          "name": "Registrar Cliente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Bruno\",\"email\":\"cliente@x.com\",\"senha\":\"senha123\",\"papel\":\"CLIENTE\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"201 Created\", () => pm.response.to.have.status(201));"] } }],
+          "response": []
+        },
+        {
+          "name": "Registrar Restaurante",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Cantina\",\"email\":\"restaurante@x.com\",\"senha\":\"senha123\",\"papel\":\"RESTAURANTE\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"201 Created\", () => pm.response.to.have.status(201));"] } }],
+          "response": []
+        },
+        {
+          "name": "Registrar Entregador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Carlos\",\"email\":\"entregador@x.com\",\"senha\":\"senha123\",\"papel\":\"ENTREGADOR\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"201 Created\", () => pm.response.to.have.status(201));"] } }],
+          "response": []
+        },
+        {
+          "name": "Registrar Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Admin\",\"email\":\"admin@x.com\",\"senha\":\"senha123\",\"papel\":\"ADMIN\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"201 Created\", () => pm.response.to.have.status(201));"] } }],
+          "response": []
+        },
+        {
+          "name": "Login Cliente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"cliente@x.com\",\"senha\":\"senha123\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.environment.set(\"tokenCliente\", pm.response.json().token);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Login Restaurante",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"restaurante@x.com\",\"senha\":\"senha123\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.environment.set(\"tokenRestaurante\", pm.response.json().token);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Login Entregador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"entregador@x.com\",\"senha\":\"senha123\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.environment.set(\"tokenEntregador\", pm.response.json().token);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"admin@x.com\",\"senha\":\"senha123\"}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.environment.set(\"tokenAdmin\", pm.response.json().token);"
+          ] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Restaurante monta o cardapio",
+      "item": [
+        {
+          "name": "Criar Restaurante",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Cantina\",\"telefone\":\"27\",\"categoria\":\"Italiana\",\"taxaEntrega\":5.00,\"endereco\":{\"logradouro\":\"Rua A\",\"numero\":\"10\",\"bairro\":\"Centro\",\"cidade\":\"Vitoria\",\"cep\":\"29000-000\"}}" },
+            "url": { "raw": "{{baseUrl}}/restaurantes", "host": ["{{baseUrl}}"], "path": ["restaurantes"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "pm.environment.set(\"restauranteId\", pm.response.json().id);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Criar Produto",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Pizza\",\"descricao\":\"Calabresa\",\"preco\":40.00,\"disponivel\":true,\"restauranteId\":{{restauranteId}}}" },
+            "url": { "raw": "{{baseUrl}}/produtos", "host": ["{{baseUrl}}"], "path": ["produtos"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "pm.environment.set(\"produtoId\", pm.response.json().id);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Listar cardapio (publico-autenticado)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/produtos?restauranteId={{restauranteId}}", "host": ["{{baseUrl}}"], "path": ["produtos"], "query": [{ "key": "restauranteId", "value": "{{restauranteId}}" }] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Entregador cria o perfil",
+      "item": [
+        {
+          "name": "Criar Entregador",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenEntregador}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Carlos\",\"telefone\":\"27988887777\",\"placaVeiculo\":\"ABC1D23\"}" },
+            "url": { "raw": "{{baseUrl}}/entregadores", "host": ["{{baseUrl}}"], "path": ["entregadores"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "pm.environment.set(\"entregadorId\", pm.response.json().id);"
+          ] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Cliente cria perfil e pedido",
+      "item": [
+        {
+          "name": "Criar Cliente",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Bruno\",\"email\":\"cliente@x.com\",\"telefone\":\"27999999999\",\"endereco\":{\"logradouro\":\"Rua A\",\"numero\":\"10\",\"bairro\":\"Centro\",\"cidade\":\"Vitoria\",\"cep\":\"29000-000\"}}" },
+            "url": { "raw": "{{baseUrl}}/clientes", "host": ["{{baseUrl}}"], "path": ["clientes"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "pm.environment.set(\"clienteId\", pm.response.json().id);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Criar Pedido (clienteId vem do token)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"restauranteId\":{{restauranteId}},\"enderecoEntrega\":{\"logradouro\":\"Rua A\",\"numero\":\"10\",\"bairro\":\"Centro\",\"cidade\":\"Vitoria\",\"cep\":\"29000-000\"},\"itens\":[{\"produtoId\":{{produtoId}},\"quantidade\":2}]}" },
+            "url": { "raw": "{{baseUrl}}/pedidos", "host": ["{{baseUrl}}"], "path": ["pedidos"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "const p = pm.response.json();",
+            "pm.environment.set(\"pedidoId\", p.id);",
+            "pm.test(\"status inicial REALIZADO\", () => pm.expect(p.status).to.eql(\"REALIZADO\"));",
+            "pm.test(\"total 85.00 (2x40 + taxa 5)\", () => pm.expect(Number(p.valorTotal)).to.eql(85.0));"
+          ] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Posse e erros",
+      "item": [
+        {
+          "name": "[403] Cliente tenta confirmar (nao e dono do restaurante)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/confirmar", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "confirmar"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"403 Forbidden (posse)\", () => pm.response.to.have.status(403));"] } }],
+          "response": []
+        },
+        {
+          "name": "[401] Sem token",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/meus", "host": ["{{baseUrl}}"], "path": ["pedidos", "meus"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));"] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Ciclo do pedido (State) - Restaurante",
+      "item": [
+        {
+          "name": "Confirmar",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/confirmar", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "confirmar"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"status CONFIRMADO\", () => pm.expect(pm.response.json().status).to.eql(\"CONFIRMADO\"));"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Iniciar preparo",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/iniciar-preparo", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "iniciar-preparo"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"status EM_PREPARO\", () => pm.expect(pm.response.json().status).to.eql(\"EM_PREPARO\"));"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Marcar pronto",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/marcar-pronto", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "marcar-pronto"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"status PRONTO\", () => pm.expect(pm.response.json().status).to.eql(\"PRONTO\"));"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Atribuir entregador",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"entregadorId\":{{entregadorId}}}" },
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/entregador", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "entregador"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"entregador vinculado\", () => pm.expect(pm.response.json().entregadorId).to.eql(Number(pm.environment.get(\"entregadorId\"))));"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Despachar",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/despachar", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "despachar"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"status EM_ROTA\", () => pm.expect(pm.response.json().status).to.eql(\"EM_ROTA\"));"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "[409] Confirmar de novo (transicao invalida)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/confirmar", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "confirmar"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"409 Conflict (State)\", () => pm.response.to.have.status(409));"] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Entrega - Entregador",
+      "item": [
+        {
+          "name": "Entregar",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenEntregador}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/entregar", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "entregar"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"status ENTREGUE\", () => pm.expect(pm.response.json().status).to.eql(\"ENTREGUE\"));"
+          ] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Pagamento (Strategy) - Cliente",
+      "item": [
+        {
+          "name": "Pagar via PIX (5% desconto)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"forma\":\"PIX\"}" },
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/pagamento", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "pagamento"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "pm.test(\"valor com desconto 80.75\", () => pm.expect(Number(pm.response.json().valor)).to.eql(80.75));"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "[422] Pagar de novo",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"forma\":\"CARTAO\"}" },
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/pagamento", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "pagamento"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"422 Unprocessable (regra: ja pago)\", () => pm.response.to.have.status(422));"] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Rastreamento (Observer)",
+      "item": [
+        {
+          "name": "Historico do pedido",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/rastreamento", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "rastreamento"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+            "pm.test(\"6 eventos gravados pelo Observer\", () => pm.expect(pm.response.json().length).to.eql(6));"
+          ] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Visao do Admin",
+      "item": [
+        {
+          "name": "Listar todos os pedidos (moderador)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenAdmin}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos?status=ENTREGUE", "host": ["{{baseUrl}}"], "path": ["pedidos"], "query": [{ "key": "status", "value": "ENTREGUE" }] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11. Referencia - outros endpoints",
+      "description": "Cobertura dos demais endpoints (GET/PUT/DELETE) para testes avulsos na apresentacao. Rode o fluxo (pastas 1-10) antes, pois estes reutilizam os ids capturados. Observacao: DELETE de cliente/restaurante/entregador so retorna 204 se a entidade nao tiver pedidos vinculados (restricao de chave estrangeira); por isso o exemplo de exclusao usa um produto descartavel.",
+      "item": [
+        {
+          "name": "Clientes - Listar (ADMIN)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenAdmin}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/clientes", "host": ["{{baseUrl}}"], "path": ["clientes"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Clientes - Buscar por id (dono)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Clientes - Atualizar (dono)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Bruno Atualizado\",\"email\":\"cliente@x.com\",\"telefone\":\"27900000000\",\"endereco\":{\"logradouro\":\"Rua B\",\"numero\":\"20\",\"bairro\":\"Centro\",\"cidade\":\"Vitoria\",\"cep\":\"29000-000\"}}" },
+            "url": { "raw": "{{baseUrl}}/clientes/{{clienteId}}", "host": ["{{baseUrl}}"], "path": ["clientes", "{{clienteId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Restaurantes - Listar (catalogo)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/restaurantes", "host": ["{{baseUrl}}"], "path": ["restaurantes"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Restaurantes - Buscar por id",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/restaurantes/{{restauranteId}}", "host": ["{{baseUrl}}"], "path": ["restaurantes", "{{restauranteId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Restaurantes - Atualizar (dono)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Cantina Nova\",\"telefone\":\"27\",\"categoria\":\"Pizzaria\",\"taxaEntrega\":6.00,\"endereco\":{\"logradouro\":\"Rua A\",\"numero\":\"10\",\"bairro\":\"Centro\",\"cidade\":\"Vitoria\",\"cep\":\"29000-000\"}}" },
+            "url": { "raw": "{{baseUrl}}/restaurantes/{{restauranteId}}", "host": ["{{baseUrl}}"], "path": ["restaurantes", "{{restauranteId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Produtos - Buscar por id",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/produtos/{{produtoId}}", "host": ["{{baseUrl}}"], "path": ["produtos", "{{produtoId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Produtos - Atualizar (dono)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Pizza Grande\",\"descricao\":\"Calabresa\",\"preco\":45.00,\"disponivel\":true,\"restauranteId\":{{restauranteId}}}" },
+            "url": { "raw": "{{baseUrl}}/produtos/{{produtoId}}", "host": ["{{baseUrl}}"], "path": ["produtos", "{{produtoId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Produtos - Criar descartavel (dono)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Refrigerante\",\"descricao\":\"Lata 350ml\",\"preco\":6.00,\"disponivel\":true,\"restauranteId\":{{restauranteId}}}" },
+            "url": { "raw": "{{baseUrl}}/produtos", "host": ["{{baseUrl}}"], "path": ["produtos"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+            "pm.environment.set(\"produtoDescartavelId\", pm.response.json().id);"
+          ] } }],
+          "response": []
+        },
+        {
+          "name": "Produtos - Excluir descartavel (dono)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenRestaurante}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/produtos/{{produtoDescartavelId}}", "host": ["{{baseUrl}}"], "path": ["produtos", "{{produtoDescartavelId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"] } }],
+          "response": []
+        },
+        {
+          "name": "Entregadores - Listar (ADMIN)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenAdmin}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/entregadores", "host": ["{{baseUrl}}"], "path": ["entregadores"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Entregadores - Buscar por id (dono)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenEntregador}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/entregadores/{{entregadorId}}", "host": ["{{baseUrl}}"], "path": ["entregadores", "{{entregadorId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Entregadores - Atualizar (dono)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenEntregador}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"nome\":\"Carlos Silva\",\"telefone\":\"27988887777\",\"placaVeiculo\":\"XYZ9K88\"}" },
+            "url": { "raw": "{{baseUrl}}/entregadores/{{entregadorId}}", "host": ["{{baseUrl}}"], "path": ["entregadores", "{{entregadorId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Pedidos - Buscar por id (participa)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Pedidos - Meus (ator logado)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/meus", "host": ["{{baseUrl}}"], "path": ["pedidos", "meus"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        },
+        {
+          "name": "Pagamento - Consultar",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{tokenCliente}}", "type": "string" }] },
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/pagamento", "host": ["{{baseUrl}}"], "path": ["pedidos", "{{pedidoId}}", "pagamento"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test(\"200 OK\", () => pm.response.to.have.status(200));"] } }],
+          "response": []
+        }
+      ]
+    }
+  ]
+}
