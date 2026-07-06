@@ -5,6 +5,8 @@ import br.ufes.deliverypedidos.dto.request.LoginRequest;
 import br.ufes.deliverypedidos.dto.request.RegisterRequest;
 import br.ufes.deliverypedidos.dto.response.TokenResponse;
 import br.ufes.deliverypedidos.repository.UsuarioRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Autenticação", description = "Cadastro e login de usuários (retorna o token JWT)")
 public class AuthController {
 
     private final UsuarioRepository usuarioRepository;
@@ -38,6 +41,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Operation(summary = "Registra um novo usuário com um papel (CLIENTE, RESTAURANTE, ENTREGADOR ou ADMIN)")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest req) {
         if (usuarioRepository.existsByEmail(req.email())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
@@ -52,6 +56,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Autentica e retorna um token JWT para usar no botão Authorize")
     public TokenResponse login(@RequestBody @Valid LoginRequest req) {
         try {
             authenticationManager.authenticate(

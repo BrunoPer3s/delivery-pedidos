@@ -3,6 +3,8 @@ package br.ufes.deliverypedidos.controller;
 import br.ufes.deliverypedidos.dto.request.PagamentoRequest;
 import br.ufes.deliverypedidos.dto.response.PagamentoResponse;
 import br.ufes.deliverypedidos.service.PagamentoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/pedidos/{pedidoId}/pagamento")
+@Tag(name = "Pagamentos", description = "Pagamento do pedido via Strategy (PIX, cartão, dinheiro)")
 public class PagamentoController {
 
     private final PagamentoService service;
@@ -27,12 +30,14 @@ public class PagamentoController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or @posse.donoDoPedido(#pedidoId, authentication)")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Paga o pedido com a forma escolhida (cliente dono ou ADMIN)")
     public PagamentoResponse pagar(@PathVariable Long pedidoId, @RequestBody @Valid PagamentoRequest req) {
         return service.pagar(pedidoId, req.forma());
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or @posse.podeVerPedido(#pedidoId, authentication)")
+    @Operation(summary = "Consulta o pagamento do pedido")
     public PagamentoResponse buscar(@PathVariable Long pedidoId) {
         return service.buscarPorPedido(pedidoId);
     }
