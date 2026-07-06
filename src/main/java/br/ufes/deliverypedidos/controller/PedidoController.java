@@ -4,9 +4,12 @@ import br.ufes.deliverypedidos.domain.model.StatusPedido;
 import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.request.AtribuirEntregadorRequest;
 import br.ufes.deliverypedidos.dto.request.PedidoRequest;
+import br.ufes.deliverypedidos.dto.response.EventoRastreamentoResponse;
 import br.ufes.deliverypedidos.dto.response.PedidoResponse;
 import br.ufes.deliverypedidos.service.PedidoService;
+import br.ufes.deliverypedidos.service.RastreamentoService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,9 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PedidoController {
 
     private final PedidoService service;
+    private final RastreamentoService rastreamentoService;
 
-    public PedidoController(PedidoService service) {
+    public PedidoController(PedidoService service, RastreamentoService rastreamentoService) {
         this.service = service;
+        this.rastreamentoService = rastreamentoService;
     }
 
     @PostMapping
@@ -63,6 +68,13 @@ public class PedidoController {
     @PreAuthorize("hasRole('ADMIN') or @posse.podeVerPedido(#id, authentication)")
     public PedidoResponse buscar(@PathVariable Long id) {
         return service.buscarPorId(id);
+    }
+
+    // Histórico de rastreamento do pedido (eventos gravados pelo Observer).
+    @GetMapping("/{id}/rastreamento")
+    @PreAuthorize("hasRole('ADMIN') or @posse.podeVerPedido(#id, authentication)")
+    public List<EventoRastreamentoResponse> rastrear(@PathVariable Long id) {
+        return rastreamentoService.doPedido(id);
     }
 
     @PatchMapping("/{id}/confirmar")

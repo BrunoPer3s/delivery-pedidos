@@ -7,6 +7,7 @@ import br.ufes.deliverypedidos.domain.model.ItemPedido;
 import br.ufes.deliverypedidos.domain.model.Pedido;
 import br.ufes.deliverypedidos.domain.model.Produto;
 import br.ufes.deliverypedidos.domain.model.Restaurante;
+import br.ufes.deliverypedidos.domain.event.ObservadorPedido;
 import br.ufes.deliverypedidos.domain.model.StatusPedido;
 import br.ufes.deliverypedidos.domain.model.Usuario;
 import br.ufes.deliverypedidos.dto.request.ItemPedidoRequest;
@@ -21,6 +22,7 @@ import br.ufes.deliverypedidos.repository.EntregadorRepository;
 import br.ufes.deliverypedidos.repository.PedidoRepository;
 import br.ufes.deliverypedidos.repository.ProdutoRepository;
 import br.ufes.deliverypedidos.repository.RestauranteRepository;
+import java.util.List;
 import java.util.function.Consumer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,11 +39,12 @@ public class PedidoService {
     private final EntregadorRepository entregadorRepository;
     private final EnderecoMapper enderecoMapper;
     private final PedidoMapper mapper;
+    private final List<ObservadorPedido> observadores;
 
     public PedidoService(PedidoRepository repository, ClienteRepository clienteRepository,
                          RestauranteRepository restauranteRepository, ProdutoRepository produtoRepository,
                          EntregadorRepository entregadorRepository, EnderecoMapper enderecoMapper,
-                         PedidoMapper mapper) {
+                         PedidoMapper mapper, List<ObservadorPedido> observadores) {
         this.repository = repository;
         this.clienteRepository = clienteRepository;
         this.restauranteRepository = restauranteRepository;
@@ -49,6 +52,7 @@ public class PedidoService {
         this.entregadorRepository = entregadorRepository;
         this.enderecoMapper = enderecoMapper;
         this.mapper = mapper;
+        this.observadores = observadores;
     }
 
     @Transactional
@@ -70,7 +74,9 @@ public class PedidoService {
             pedido.adicionarItem(new ItemPedido(produto, itemReq.quantidade()));
         }
 
-        return mapper.toResponse(repository.save(pedido));
+        Pedido salvo = repository.save(pedido);
+        notificarMudancaDeEstado(salvo);
+        return mapper.toResponse(salvo);
     }
 
     @Transactional(readOnly = true)
@@ -161,9 +167,10 @@ public class PedidoService {
         return mapper.toResponse(pedido);
     }
 
+    // Loop de notificação do Observer: percorre os observadores coletados pelo
+    // Spring e avisa cada um sobre a mudança de estado do pedido.
     private void notificarMudancaDeEstado(Pedido pedido) {
-        // Ponto de extensão do Observer: os observadores de rastreamento
-        // serão notificados aqui a cada mudança de estado do pedido.
+        observadores.forEach(observador -> observador.aoMudarEstado(pedido));
     }
 
     private void validarProduto(Produto produto, Restaurante restaurante) {

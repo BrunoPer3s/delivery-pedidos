@@ -15,6 +15,7 @@ import br.ufes.deliverypedidos.dto.request.PedidoRequest;
 import br.ufes.deliverypedidos.dto.request.ProdutoRequest;
 import br.ufes.deliverypedidos.dto.request.RestauranteRequest;
 import br.ufes.deliverypedidos.dto.response.EntregadorResponse;
+import br.ufes.deliverypedidos.dto.response.EventoRastreamentoResponse;
 import br.ufes.deliverypedidos.dto.response.PedidoResponse;
 import br.ufes.deliverypedidos.dto.response.ProdutoResponse;
 import br.ufes.deliverypedidos.dto.response.RestauranteResponse;
@@ -50,6 +51,9 @@ class PedidoServiceTest {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private RastreamentoService rastreamentoService;
 
     private EnderecoDTO endereco() {
         return new EnderecoDTO("Rua A", "10", "Centro", "Vitória", "29000-000");
@@ -144,5 +148,18 @@ class PedidoServiceTest {
         boolean encontrado = pedidoService.listar(StatusPedido.CONFIRMADO, PageRequest.of(0, 10))
                 .stream().anyMatch(p -> p.id().equals(pedido.id()));
         assertTrue(encontrado);
+    }
+
+    @Test
+    void rastreamentoRegistraCadaMudancaDeEstado() {
+        PedidoResponse pedido = pedidoBasico();
+        pedidoService.confirmar(pedido.id());
+        pedidoService.iniciarPreparo(pedido.id());
+
+        List<EventoRastreamentoResponse> eventos = rastreamentoService.doPedido(pedido.id());
+        assertEquals(3, eventos.size());
+        assertEquals(StatusPedido.REALIZADO, eventos.get(0).status());
+        assertEquals(StatusPedido.CONFIRMADO, eventos.get(1).status());
+        assertEquals(StatusPedido.EM_PREPARO, eventos.get(2).status());
     }
 }
